@@ -12,7 +12,7 @@ typedef u64 (*foo42_t)(void);
 
 void foo42()
 {
-    CodeBuffer code_buffer = alloc_jit_mem(4096);
+    CodeBuffer code_buffer = cb_create(4096);
 
     emit_mov_imm(&code_buffer, 0, 42); // mov x0, #42
     emit_ret(&code_buffer);
@@ -22,14 +22,14 @@ void foo42()
     u64 result = func();
     log("Result: %llu", result);
 
-    free_jit_mem(&code_buffer);
+    cb_destroy(&code_buffer);
 }
 
 typedef u64 (*twice_t)(u64);
 
 void twice()
 {
-    CodeBuffer code_buffer = alloc_jit_mem(4096);
+    CodeBuffer code_buffer = cb_create(4096);
 
     emit_add(&code_buffer, 0, 0, 0); // add x0, x0, x0
     emit_ret(&code_buffer);
@@ -39,14 +39,14 @@ void twice()
     u64 result = func(192);
     log("Result: %llu", result);
 
-    free_jit_mem(&code_buffer);
+    cb_destroy(&code_buffer);
 }
 
 typedef u64 (*expr_fn_t)(void);
 
 void simple_expr()
 {
-    CodeBuffer code_buffer = alloc_jit_mem(4096);
+    CodeBuffer code_buffer = cb_create(4096);
 
     Expr expr =
     {
@@ -76,7 +76,7 @@ void simple_expr()
     u64 result = func();
     log("Result: %llu", result);
 
-    free_jit_mem(&code_buffer);
+    cb_destroy(&code_buffer);
 }
 
 // =============================================================

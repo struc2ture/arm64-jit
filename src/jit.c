@@ -9,7 +9,7 @@
 #include "common/types.h"
 #include "common/util.h"
 
-CodeBuffer alloc_jit_mem(size_t size)
+CodeBuffer cb_create(size_t size)
 {
     void *mem = mmap(NULL, size,
                      PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -27,13 +27,13 @@ CodeBuffer alloc_jit_mem(size_t size)
     };
 }
 
-void free_jit_mem(CodeBuffer *code_buffer)
+void cb_destroy(CodeBuffer *code_buffer)
 {
     munmap(code_buffer->base, code_buffer->capacity);
     *code_buffer = (CodeBuffer) {};
 }
 
-void copy_code(CodeBuffer *code_buffer, u32 *code, size_t code_size)
+void cb_copy_code(CodeBuffer *code_buffer, u32 *code, size_t code_size)
 {
     pthread_jit_write_protect_np(0);
     memcpy(code_buffer->base + code_buffer->offset, code, code_size);

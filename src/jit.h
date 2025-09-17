@@ -12,8 +12,8 @@ typedef struct
 
 } CodeBuffer;
 
-CodeBuffer alloc_jit_mem(size_t size);
-void free_jit_mem(CodeBuffer *code_buffer);
-void copy_code(CodeBuffer *code_buffer, u32 *code, size_t code_size);
+CodeBuffer cb_create(size_t size);
+void cb_destroy(CodeBuffer *code_buffer);
+void cb_copy_code(CodeBuffer *code_buffer, u32 *code, size_t code_size);
 void cb_write_4bytes(CodeBuffer *cb, u32 data);
 void *cb_get_proc(CodeBuffer *cb);
