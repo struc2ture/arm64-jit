@@ -3,6 +3,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <pthread.h>
+#include <libkern/OSCacheControl.h>
 
 #include "util.h"
 
@@ -79,6 +80,12 @@ void cb_write_4bytes(CodeBuffer *cb, uint32_t data)
     cb->offset += sizeof(data);
 }
 
+void *cb_get_proc(CodeBuffer *cb)
+{
+    sys_icache_invalidate((void *)cb->base, cb->offset);
+    return cb->base;
+}
+
 void emit_mov_imm(CodeBuffer *cb, int reg, uint16_t imm)
 {
     uint32_t instr = 0xd2800000 | (imm << 5) | reg;
@@ -149,10 +156,10 @@ void foo42()
     emit_mov_imm(&code_buffer, 0, 42); // mov x0, #42
     emit_ret(&code_buffer);
 
-    foo42_t func = (foo42_t)code_buffer.base;
+    foo42_t func = (foo42_t)cb_get_proc(&code_buffer);
 
     uint64_t result = func();
-    printf("Result: %llu\n", result);
+    log("Result: %llu", result);
 
     free_jit_mem(&code_buffer);
 }
@@ -166,10 +173,10 @@ void twice()
     emit_add(&code_buffer, 0, 0, 0); // add x0, x0, x0
     emit_ret(&code_buffer);
 
-    twice_t func = (twice_t)code_buffer.base;
+    twice_t func = (twice_t)cb_get_proc(&code_buffer);
 
     uint64_t result = func(192);
-    printf("Result: %llu\n", result);
+    log("Result: %llu", result);
 
     free_jit_mem(&code_buffer);
 }
@@ -203,10 +210,10 @@ void simple_expr()
     compile_expr(&code_buffer, &expr, 0);
     emit_ret(&code_buffer);
 
-    expr_fn_t func = (expr_fn_t)code_buffer.base;
+    expr_fn_t func = (expr_fn_t)cb_get_proc(&code_buffer);
 
     uint64_t result = func();
-    printf("Result: %llu\n", result);
+    log("Result: %llu", result);
 
     free_jit_mem(&code_buffer);
 }
@@ -215,17 +222,17 @@ void simple_expr()
 
 int main(void)
 {
-    printf("42:\n");
+    log("42:");
     foo42();
-    printf("\n");
+    log("");
 
-    printf("TWICE:\n");
+    log("TWICE:");
     twice();
-    printf("\n");
+    log("");
 
-    printf("SIMPLE EXPR:\n");
+    log("SIMPLE EXPR:");
     simple_expr();
-    printf("\n");
+    log("");
 
     return 0;
 }
