@@ -26,6 +26,8 @@ bool parser_accept(Parser *p, TokenKind kind)
     return false;
 }
 
+// ========================================
+
 Ast *make_node(AstKind kind, Ast *left, Ast *right)
 {
     Ast *n = xmalloc(sizeof(*n));
@@ -47,6 +49,29 @@ Ast *make_int(int value)
     return n;
 }
 
+Ast *make_var(const char *name)
+{
+    Ast *n = xmalloc(sizeof(*n));
+    *n = (Ast){
+        .kind = AST_VAR,
+        .name = name
+    };
+    return n;
+}
+
+Ast *make_assign(const char *name, Ast *rhs)
+{
+    Ast *n = xmalloc(sizeof(*n));
+    *n = (Ast){
+        .kind = AST_ASSIGN,
+        .name = name,
+        .left = rhs
+    };
+    return n;
+}
+
+// ========================================
+
 Ast *parse_factor(Parser *p)
 {
     if (p->current.kind == TOK_INT)
@@ -55,18 +80,40 @@ Ast *parse_factor(Parser *p)
         parser_advance(p);
         return make_int(val);
     }
+    else if (p->current.kind == TOK_IDENT)
+    {
+        const char *name = strdup(p->current.text);
+        parser_advance(p);
+
+        if (parser_accept(p, TOK_EQ))
+        {
+            Ast *rhs = parse_expr(p);
+
+            int reg = find_local(&p->locals, name);
+            if (reg < 0)
+            {
+                reg = add_local(&p->locals, name);
+            }
+
+            return make_assign(name, rhs);
+        }
+
+        int reg = expect_local(&p->locals, name);
+
+        return make_var(name);
+    }
     else if (parser_accept(p, TOK_LPAREN))
     {
         Ast *e = parse_expr(p);
         if (!parser_accept(p, TOK_RPAREN))
         {
-            fatal("Expected ')'");
+            fatal("Parser: expected ')'");
         }
         return e;
     }
     else
     {
-        fatal("Unexpected token in factor: %s", tok_kind_str(p->current.kind));
+        fatal("Parser: unexpected token in factor: %s", tok_kind_str(p->current.kind));
     }
 }
 
@@ -96,6 +143,8 @@ Ast *parse_expr(Parser *p)
     return node;
 }
 
+// ========================================
+
 void print_ast(Ast *n, int indent)
 {
     if (!n || n->kind == AST_NONE) return;
@@ -107,8 +156,51 @@ void print_ast(Ast *n, int indent)
         case AST_SUB: printf("SUB\n"); break;
         case AST_MUL: printf("MUL\n"); break;
         case AST_DIV: printf("DIV\n"); break;
+        case AST_VAR: printf("VAR: %s\n", n->name); break;
+        case AST_ASSIGN: printf("ASSIGN: %s\n", n->name); break;
         case AST_NONE: case AST_COUNT: printf("UNKNOWN\n");
     }
     print_ast(n->left, indent + 1);
     print_ast(n->right, indent + 1);
+}
+
+// ========================================
+
+int find_local(const SymbolList *locals, const char *name)
+{
+    const Symbol *symbol_it;
+    list_iterate(locals, i, symbol_it)
+    {
+        if (strcmp(symbol_it->name, name) == 0)
+        {
+            return symbol_it->reg;
+        }
+    }
+    return -1;
+}
+
+int expect_local(const SymbolList *locals, const char *name)
+{
+    int reg = find_local(locals, name);
+    if (reg < 0)
+    {
+        fatal("Parser: variable %s is used before assignment", name);
+    }
+    return reg;
+}
+
+int add_local(SymbolList *locals, const char *name)
+{
+    if (locals->size >= MAX_LOCALS)
+    {
+        fatal("Too many locals");
+    }
+    int reg = 2 + locals->size; // reserve x0 and x1 for temps
+    Symbol symbol =
+    {
+        .name = strdup(name),
+        .reg = reg
+    };
+    list_append(locals, symbol);
+    return reg;
 }

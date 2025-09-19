@@ -57,7 +57,7 @@ int main()
         print_ast(root, 0);
 
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, 0);
+        codegen_expr(&cb, root, &parser.locals, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
@@ -80,7 +80,7 @@ int main()
         print_ast(root, 0);
 
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, 0);
+        codegen_expr(&cb, root, &parser.locals, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
@@ -103,7 +103,7 @@ int main()
         print_ast(root, 0);
 
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, 0);
+        codegen_expr(&cb, root, &parser.locals, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
@@ -113,7 +113,7 @@ int main()
     }
     log("");
 
-    log("Codegen test 3");
+    log("Codegen test 4");
     {
         const char *input = "1 + 2 + 3 - 4";
 
@@ -126,7 +126,7 @@ int main()
         print_ast(root, 0);
 
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, 0);
+        codegen_expr(&cb, root, &parser.locals, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);

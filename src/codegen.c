@@ -4,7 +4,7 @@
 #include "jit.h"
 #include "parser.h"
 
-void codegen_expr(CodeBuffer *cb, Ast *node, int target_reg)
+void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg)
 {
     switch(node->kind)
     {
@@ -20,8 +20,8 @@ void codegen_expr(CodeBuffer *cb, Ast *node, int target_reg)
             int left_reg = target_reg;
             int right_reg = target_reg + 1;
 
-            codegen_expr(cb, node->left, left_reg);
-            codegen_expr(cb, node->right, right_reg);
+            codegen_expr(cb, node->left, locals, left_reg);
+            codegen_expr(cb, node->right, locals, right_reg);
 
             switch (node->kind)
             {
@@ -33,13 +33,40 @@ void codegen_expr(CodeBuffer *cb, Ast *node, int target_reg)
             }
         } break;
 
-        case AST_NONE: case AST_COUNT: fatal("Invalid AST node");
+        case AST_VAR:
+        {
+            int reg = get_reg_for_var(node->name, locals);
+            if (reg != target_reg)
+            {
+                emit_mov_reg(cb, target_reg, reg);
+            }
+        } break;
+
+        case AST_ASSIGN:
+        {
+            int reg = get_reg_for_var(node->name, locals);
+            codegen_expr(cb, node->left, locals, target_reg);
+            if (target_reg != reg)
+            {
+                emit_mov_reg(cb, reg, target_reg);
+            }
+        } break;
+
+        case AST_NONE: case AST_COUNT: fatal("Codegen: invalid AST node");
     }
 }
+
+// ========================================
 
 void emit_mov_imm(CodeBuffer *cb, int reg, u16 imm)
 {
     uint32_t instr = 0xd2800000 | (imm << 5) | reg;
+    cb_write_4bytes(cb, instr);
+}
+
+void emit_mov_reg(CodeBuffer *cb, int dst, int src)
+{
+    uint32_t instr = 0xaa0003e0 | (src << 16) | dst;
     cb_write_4bytes(cb, instr);
 }
 
@@ -71,4 +98,13 @@ void emit_ret(CodeBuffer *cb)
 {
     uint32_t instr = 0xd65f03c0;
     cb_write_4bytes(cb, instr);
+}
+
+// ========================================
+
+int get_reg_for_var(const char *name, const SymbolList *locals)
+{
+    int reg = find_local(locals, name);
+    if (reg < 0) fatal("Codegen: unknown variable %s\n", name);
+    return reg;
 }

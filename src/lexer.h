@@ -6,12 +6,15 @@ typedef enum
 {
     TOK_NONE,
     TOK_INT,
+    TOK_IDENT,
     TOK_PLUS,
     TOK_MINUS,
     TOK_STAR,
     TOK_SLASH,
     TOK_LPAREN,
     TOK_RPAREN,
+    TOK_EQ,
+    TOK_SEMI,
     TOK_EOF,
     TOK_COUNT
 
@@ -21,6 +24,7 @@ typedef struct Token
 {
     TokenKind kind;
     int value;
+    const char *text; // for TOK_IDENT
 
 } Token;
 

@@ -1,5 +1,7 @@
 #include "lexer.h"
 
+#include <string.h>
+
 // ================================================
 
 const char *tok_kind_str(TokenKind kind)
@@ -8,6 +10,7 @@ const char *tok_kind_str(TokenKind kind)
     {
         case TOK_NONE: return "NONE";
         case TOK_INT: return "Int";
+        case TOK_IDENT: return "Ident";
         case TOK_PLUS: return "Plus";
         case TOK_MINUS: return "Minus";
         case TOK_STAR: return "Star";
@@ -50,9 +53,31 @@ int lex_number(Lexer *lex)
 
 Token lexer_next(Lexer *lex)
 {
-    while (lex->ch == ' ' || lex->ch == '\t' || lex->ch == '\n')
+    while (lex->ch == ' ' ||
+           lex->ch == '\t' ||
+           lex->ch == '\n')
     {
         lexer_advance(lex);
+    }
+
+    if ((lex->ch >= 'a' && lex->ch <= 'z') ||
+        (lex->ch >= 'A' && lex->ch <= 'Z') ||
+         lex->ch == '_')
+    {
+        size_t start = lex->pos - 1;
+        while ((lex->ch >= 'a' && lex->ch <= 'z') ||
+               (lex->ch >= 'A' && lex->ch <= 'Z') ||
+               (lex->ch >= '0' && lex->ch <= '9') ||
+                lex->ch == '_')
+        {
+            lexer_advance(lex);
+        }
+        size_t len = lex->pos - start - 1;
+        char *text = strndup(&lex->src[start], len);
+        return (Token){
+            .kind = TOK_IDENT,
+            .text = text
+        };
     }
 
     if (lex->ch >= '0' && lex->ch <= '9')
@@ -73,6 +98,8 @@ Token lexer_next(Lexer *lex)
         case '/': tok.kind = TOK_SLASH; break;
         case '(': tok.kind = TOK_LPAREN; break;
         case ')': tok.kind = TOK_RPAREN; break;
+        case '=': tok.kind = TOK_EQ; break;
+        case ';': tok.kind = TOK_SEMI; break;
         case '\0': tok.kind = TOK_EOF; break;
         default: tok.kind = TOK_NONE; break;
     }
