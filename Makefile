@@ -15,7 +15,7 @@ bin/basic_test: $(wildcard src/*)
 basic_test: bin/basic_test
 	lldb ./bin/basic_test -o r -o q
 
-TEST2 = jit.c lexer.c parser.c codegen.c
+TEST2 = jit.c lexer.c parser.c codegen.c reg_pool.c
 bin/test2: $(wildcard src/*)
 	$(CC) $(CFLAGS) $(SRC)/test2.c $(addprefix $(SRC)/, $(TEST2)) -o $@
 

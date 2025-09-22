@@ -56,14 +56,16 @@ int main()
         Ast *root = parse_expr(&parser);
         print_ast(root, 0);
 
+        RegPool reg_pool = {};
+
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, &parser.locals, 0);
+        codegen_expr(&cb, root, &parser.locals, &reg_pool, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
         i64 result = (i64)fn();
 
-        log("Result %lld", result); 
+        log("%s = %lld", input, result); 
     }
     log("");
 
@@ -79,14 +81,16 @@ int main()
         Ast *root = parse_expr(&parser);
         print_ast(root, 0);
 
+        RegPool reg_pool = {};
+
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, &parser.locals, 0);
+        codegen_expr(&cb, root, &parser.locals, &reg_pool, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
         i64 result = (i64)fn();
 
-        log("Result %lld", result); 
+        log("%s = %lld", input, result); 
     }
     log("");
 
@@ -102,37 +106,16 @@ int main()
         Ast *root = parse_expr(&parser);
         print_ast(root, 0);
 
+        RegPool reg_pool = {};
+
         CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, &parser.locals, 0);
+        codegen_expr(&cb, root, &parser.locals, &reg_pool, 0);
         emit_ret(&cb);
 
         expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
         i64 result = (i64)fn();
 
-        log("Result %lld", result); 
-    }
-    log("");
-
-    log("Codegen test 4");
-    {
-        const char *input = "1 + 2 + 3 - 4";
-
-        Lexer lex;
-        lexer_init(&lex, input);
-
-        Parser parser;
-        parser_init(&parser, &lex);
-        Ast *root = parse_expr(&parser);
-        print_ast(root, 0);
-
-        CodeBuffer cb = cb_create(4096);
-        codegen_expr(&cb, root, &parser.locals, 0);
-        emit_ret(&cb);
-
-        expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
-        i64 result = (i64)fn();
-
-        log("Result %lld", result); 
+        log("%s = %lld", input, result); 
     }
     log("");
 

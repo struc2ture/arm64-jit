@@ -2,10 +2,11 @@
 
 #include "jit.h"
 #include "parser.h"
+#include "reg_pool.h"
 
 typedef u64 (*expr_fn_t)(void);
 
-void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg);
+void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, RegPool *reg_pool, int target_reg);
 
 // ========================================
 

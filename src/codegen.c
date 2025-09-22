@@ -3,8 +3,9 @@
 #include "common/util.h"
 #include "jit.h"
 #include "parser.h"
+#include "reg_pool.h"
 
-void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg)
+void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, RegPool *reg_pool, int target_reg)
 {
     switch(node->kind)
     {
@@ -18,10 +19,10 @@ void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg)
         case AST_DIV:
         {
             int left_reg = target_reg;
-            int right_reg = target_reg + 1;
+            int right_reg = alloc_temp_reg(reg_pool);
 
-            codegen_expr(cb, node->left, locals, left_reg);
-            codegen_expr(cb, node->right, locals, right_reg);
+            codegen_expr(cb, node->left, locals, reg_pool, left_reg);
+            codegen_expr(cb, node->right, locals, reg_pool, right_reg);
 
             switch (node->kind)
             {
@@ -31,6 +32,8 @@ void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg)
                 case AST_DIV: emit_div(cb, target_reg, left_reg, right_reg); break;
                 default: break;
             }
+
+            free_temp_reg(reg_pool, right_reg);
         } break;
 
         case AST_VAR:
@@ -45,7 +48,7 @@ void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, int target_reg)
         case AST_ASSIGN:
         {
             int reg = get_reg_for_var(node->name, locals);
-            codegen_expr(cb, node->left, locals, target_reg);
+            codegen_expr(cb, node->left, locals, reg_pool, target_reg);
             if (target_reg != reg)
             {
                 emit_mov_reg(cb, reg, target_reg);
