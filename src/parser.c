@@ -26,6 +26,17 @@ bool parser_accept(Parser *p, TokenKind kind)
     return false;
 }
 
+void parser_expect(Parser *p, TokenKind kind)
+{
+    if (p->current.kind != kind)
+    {
+        fatal("Parser: expected token %s, but got %s",
+            tok_kind_str(kind),
+            tok_kind_str(p->current.kind));
+    }
+    parser_advance(p);
+}
+
 // ========================================
 
 Ast *make_node(AstKind kind, Ast *left, Ast *right)
@@ -66,6 +77,36 @@ Ast *make_assign(const char *name, Ast *rhs)
         .kind = AST_ASSIGN,
         .name = name,
         .left = rhs
+    };
+    return n;
+}
+
+Ast *make_statement_list(Ast *head)
+{
+    Ast *n = xmalloc(sizeof(*n));
+    *n = (Ast){
+        .kind = AST_STMT_LIST,
+        .next_stmt = head
+    };
+    return n;
+}
+
+Ast *make_return(Ast *val)
+{
+    Ast *n = xmalloc(sizeof(*n));
+    *n = (Ast){
+        .kind = AST_RETURN,
+        .left = val
+    };
+    return n;
+}
+
+Ast *make_expr_stmt(Ast *expr)
+{
+    Ast *n = xmalloc(sizeof(*n));
+    *n = (Ast){
+        .kind = AST_EXPR_STMT,
+        .left = expr
     };
     return n;
 }
@@ -143,6 +184,37 @@ Ast *parse_expr(Parser *p)
     return node;
 }
 
+Ast *parse_stmt(Parser *p)
+{
+    if (parser_accept(p, TOK_RETURN))
+    {
+        Ast *val = parse_expr(p);
+        parser_expect(p, TOK_SEMI);
+        return make_return(val);
+    }
+    else
+    {
+        Ast *expr = parse_expr(p);
+        parser_expect(p, TOK_SEMI);
+        return make_expr_stmt(expr);
+    }
+}
+
+Ast *parse_stmt_list(Parser *p)
+{
+    Ast *head = NULL;
+    Ast **tail = &head;
+
+    while (p->current.kind != TOK_EOF)
+    {
+        Ast *stmt = parse_stmt(p);
+        *tail = stmt;
+        tail = &stmt->next_stmt;
+    }
+
+    return make_statement_list(head);
+}
+
 // ========================================
 
 void print_ast(Ast *n, int indent)
@@ -158,8 +230,22 @@ void print_ast(Ast *n, int indent)
         case AST_DIV: printf("DIV\n"); break;
         case AST_VAR: printf("VAR: %s\n", n->name); break;
         case AST_ASSIGN: printf("ASSIGN: %s\n", n->name); break;
+        case AST_STMT_LIST: printf("STMT_LIST\n"); break;
+        case AST_RETURN: printf("RETURN\n"); break;
+        case AST_EXPR_STMT: printf("EXPR_STMT\n"); break;
         case AST_NONE: case AST_COUNT: printf("UNKNOWN\n");
     }
+
+    if (n->kind == AST_STMT_LIST)
+    {
+        Ast *stmt = n->next_stmt;
+        while (stmt)
+        {
+            print_ast(stmt, indent + 1);
+            stmt = stmt->next_stmt;
+        }
+    }
+
     print_ast(n->left, indent + 1);
     print_ast(n->right, indent + 1);
 }

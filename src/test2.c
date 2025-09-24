@@ -119,5 +119,21 @@ int main()
     }
     log("");
 
+    log("Statement list");
+    {
+        const char *input =
+            "1 + 2 + 3 - 4;\n"
+            "2 * 3;";
+
+        Lexer lex;
+        lexer_init(&lex, input);
+
+        Parser parser;
+        parser_init(&parser, &lex);
+        Ast *root = parse_stmt_list(&parser);
+        print_ast(root, 0);
+    }
+    log("");
+
     return 0;
 }

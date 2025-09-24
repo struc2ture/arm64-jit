@@ -56,6 +56,10 @@ void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, RegPool *reg_po
         } break;
 
         case AST_NONE: case AST_COUNT: fatal("Codegen: invalid AST node");
+
+        case AST_STMT_LIST:
+        case AST_RETURN:
+        case AST_EXPR_STMT: fatal("Not implemented");
     }
 }
 

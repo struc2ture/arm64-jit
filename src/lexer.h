@@ -15,6 +15,7 @@ typedef enum
     TOK_RPAREN,
     TOK_EQ,
     TOK_SEMI,
+    TOK_RETURN,
     TOK_EOF,
     TOK_COUNT
 
