@@ -119,7 +119,7 @@ int main()
     }
     log("");
 
-    log("Statement list");
+    log("Statement list AST");
     {
         const char *input =
             "1 + 2 + 3 - 4;\n"
@@ -132,6 +132,34 @@ int main()
         parser_init(&parser, &lex);
         Ast *root = parse_stmt_list(&parser);
         print_ast(root, 0);
+    }
+    log("");
+
+    log("Return");
+    {
+        const char *input =
+            "2 * 3;"
+            "x = 2 * 3;\n"
+            "x = x * 4;\n"
+            "return x;\n";
+
+        Lexer lex;
+        lexer_init(&lex, input);
+
+        Parser parser;
+        parser_init(&parser, &lex);
+        Ast *root = parse_stmt_list(&parser);
+        print_ast(root, 0);
+
+        RegPool reg_pool = {};
+
+        CodeBuffer cb = cb_create(4096);
+        codegen_stmt(&cb, root, &parser.locals, &reg_pool);
+
+        expr_fn_t fn = (expr_fn_t)cb_get_proc(&cb);
+        i64 result = (i64)fn();
+
+        log("%s => %lld", input, result); 
     }
     log("");
 

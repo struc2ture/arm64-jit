@@ -55,11 +55,36 @@ void codegen_expr(CodeBuffer *cb, Ast *node, SymbolList *locals, RegPool *reg_po
             }
         } break;
 
-        case AST_NONE: case AST_COUNT: fatal("Codegen: invalid AST node");
+        default: fatal("Codegen: invalid AST node");
+    }
+}
+
+void codegen_stmt(CodeBuffer *cb, Ast *node, SymbolList *locals, RegPool *reg_pool)
+{
+    switch (node->kind)
+    {
+        case AST_EXPR_STMT:
+        {
+            int temp_reg = alloc_temp_reg(reg_pool);
+            codegen_expr(cb, node->left, locals, reg_pool, temp_reg);
+            free_temp_reg(reg_pool, temp_reg);
+        } break;
+
+        case AST_RETURN:
+        {
+            codegen_expr(cb, node->left, locals, reg_pool, 0);
+            emit_ret(cb);
+        } break;
 
         case AST_STMT_LIST:
-        case AST_RETURN:
-        case AST_EXPR_STMT: fatal("Not implemented");
+        {
+            for (Ast *stmt = node->next_stmt; stmt; stmt = stmt->next_stmt)
+            {
+                codegen_stmt(cb, stmt, locals, reg_pool);
+            }
+        } break;
+
+        default: fatal("Codegen: invalid node kind in codegen_stmt");
     }
 }
 

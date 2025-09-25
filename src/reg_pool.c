@@ -3,6 +3,14 @@
 #include "common/types.h"
 #include "common/util.h"
 
+void _print_temp_regs(RegPool *reg_pool)
+{
+    for (int i = 0; i < MAX_TEMP_REGS; i++)
+    {
+        printf("%d", reg_pool->used[i]);
+    }
+}
+
 int alloc_temp_reg(RegPool *reg_pool)
 {
     for (int i = 0; i < MAX_TEMP_REGS; i++)
@@ -19,6 +27,7 @@ int alloc_temp_reg(RegPool *reg_pool)
 void free_temp_reg(RegPool *reg_pool, int reg)
 {
     int idx = reg - FIRST_TEMP_REG;
+    bassert(idx >= 0 && idx < MAX_TEMP_REGS);
     if (idx < 0 || idx >= MAX_TEMP_REGS) return;
-    reg_pool->used[reg] = false;
+    reg_pool->used[idx] = false;
 }

@@ -72,12 +72,23 @@ Token lexer_next(Lexer *lex)
         {
             lexer_advance(lex);
         }
+
         size_t len = lex->pos - start - 1;
-        char *text = strndup(&lex->src[start], len);
-        return (Token){
-            .kind = TOK_IDENT,
-            .text = text
-        };
+
+        if (strncmp(&lex->src[start], "return", len) == 0)
+        {
+            return (Token){
+                .kind = TOK_RETURN
+            };
+        }
+        else
+        {
+            char *text = strndup(&lex->src[start], len);
+            return (Token){
+                .kind = TOK_IDENT,
+                .text = text
+            };
+        }
     }
 
     if (lex->ch >= '0' && lex->ch <= '9')

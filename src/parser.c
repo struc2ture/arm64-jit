@@ -8,6 +8,7 @@
 void parser_init(Parser *p, Lexer *lex)
 {
     p->lex = lex;
+    p->locals = (SymbolList){};
     parser_advance(p);
 }
 

@@ -20,5 +20,5 @@ bin/test2: $(wildcard src/*)
 	$(CC) $(CFLAGS) $(SRC)/test2.c $(addprefix $(SRC)/, $(TEST2)) -o $@
 
 test2: bin/test2
-	lldb ./bin/test2 -o r -o q
+	lldb ./bin/test2 -o r
 
